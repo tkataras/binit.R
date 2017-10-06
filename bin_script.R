@@ -12,9 +12,9 @@ binit <- function(datain, sbin){
   bin_rd_pos_2 <- floor(bin_rd_pos_2_no_round)
   binit_out <-data.frame(datain$read_name, datain$ch_1_locus, datain$rd_pos_1, bin_rd_pos_1, datain$ch_2_locus, datain$rd_pos_2, bin_rd_pos_2, datain$chrom_assign, row.names=TRUE)
   
-  n <-head(binit_out)
-  return(n)
-  sink("binit_output", append=FALSE, split=FALSE )
+  
+  return(binit_out)
+  
   
   }
 
