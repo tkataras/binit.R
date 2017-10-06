@@ -14,8 +14,8 @@ binit <- function(datain, sbin){
   
   
   return(binit_out)
-  	write(binit_out,"binit_out", ncolumns=8, append=FALSE, sep="\t")
-  
+	write.table(binit_out,"binit_out", ncolumns=8, append=FALSE, sep="\t")
+
   }
 
 
