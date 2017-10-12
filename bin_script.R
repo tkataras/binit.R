@@ -1,13 +1,17 @@
-
 #fuction itself
 #datain file should be the "****_allValidPairs" file, this R script gives nice col.names, bins, creates data.frame with only useful info and then returns head
-binit <- function(datain, sbin, sav.loc="./"){
-  ###### ERROR CHECK
-  
+binit <- function(datain="~/bigdata/hic/data/SRR2240738/mm10/output/hic_results/data/mNPe/mNPe_allValidPairs", sbin=10000, sav.loc="./"){
+  ###### ERROR CHECK, adding "/"
+  if(!is.character(sav.loc)) stop("sav.loc must be a character string")
+  split.string = unlist(strsplit(sav.loc,""))
+  l = length(split.string)
+  lastchar = split.string[l]
+  if(lastchar!="/") datain = paste0(sav.loc,"/")
+    
   ##### DATA MANIP
   # datain file should be the "****_allValidPairs"
   inputlist = strsplit(datain,"/")
-  inputsplit = inputlist[[1]] #could use unlist command
+  inputsplit = inputlist[[1]] # could use unlist command
   l = length(inputsplit)
   outfile_name = paste0(inputsplit[l],"_binit_out")
   ######
@@ -24,11 +28,6 @@ binit <- function(datain, sbin, sav.loc="./"){
   binit_out<-data.frame(datain$read_name, datain$ch_1_locus, datain$rd_pos_1, bin_rd_pos_1, datain$ch_2_locus, datain$rd_pos_2, bin_rd_pos_2, datain$chrom_assign, row.names=TRUE)
   
   ####OUTPUT
- 
-  
-	write.table(binit_out, outfile_name , append=FALSE, sep="\t")
+	write.table(binit_out, outfile_name , append=FALSE, sep="\t", quote=FALSE)
 
 }
-
-
-
