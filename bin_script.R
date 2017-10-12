@@ -7,7 +7,7 @@ binit <- function(datain, sbin, sav.loc="./"){
   ##### DATA MANIP
   # datain file should be the "****_allValidPairs"
   inputlist = strsplit(datain,"/")
-  inputsplit = inputlist[[1]]
+  inputsplit = inputlist[[1]] #could use unlist command
   l = length(inputsplit)
   outfile_name = paste0(inputsplit[l],"_binit_out")
   ######
