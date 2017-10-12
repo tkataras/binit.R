@@ -1,7 +1,18 @@
 
 #fuction itself
 #datain file should be the "****_allValidPairs" file, this R script gives nice col.names, bins, creates data.frame with only useful info and then returns head
-binit <- function(datain, sbin){
+binit <- function(datain, sbin, sav.loc="./"){
+  ###### ERROR CHECK
+  
+  ##### DATA MANIP
+  # datain file should be the "****_allValidPairs"
+  inputlist = strsplit(datain,"/")
+  inputsplit = inputlist[[1]]
+  l = length(inputsplit)
+  outfile_name = paste0(inputsplit[l],"_binit_out")
+  ######
+  
+  #BINNING
   datain <- read.table(datain)
   colnames(datain) <-  c("read_name", "ch_1_locus", "rd_pos_1", "strand1", "ch_2_locus", "rd_pos_2", "strand2", "frag_lngth","res_frag_1", "res_frag_2", "map_qual_1", "map_qual_2", "chrom_assign")
   
@@ -10,12 +21,14 @@ binit <- function(datain, sbin){
     
   bin_rd_pos_2_no_round <- datain$rd_pos_2/sbin
   bin_rd_pos_2 <- floor(bin_rd_pos_2_no_round)
-  binit_out <-data.frame(datain$read_name, datain$ch_1_locus, datain$rd_pos_1, bin_rd_pos_1, datain$ch_2_locus, datain$rd_pos_2, bin_rd_pos_2, datain$chrom_assign, row.names=TRUE)
+  binit_out<-data.frame(datain$read_name, datain$ch_1_locus, datain$rd_pos_1, bin_rd_pos_1, datain$ch_2_locus, datain$rd_pos_2, bin_rd_pos_2, datain$chrom_assign, row.names=TRUE)
   
+  ####OUTPUT
+ 
   
-  return(binit_out)
-	write.table(binit_out,"binit_out", ncolumns=8, append=FALSE, sep="\t")
+	write.table(binit_out, outfile_name , append=FALSE, sep="\t")
 
-  }
+}
+
 
 
