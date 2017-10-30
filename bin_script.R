@@ -42,7 +42,7 @@ binit <- function(datain="~/bigdata/hic/data/SRR2240738/mm10/output/hic_results/
   datain <- read.table(datain)
   colnames(datain) <-  c("read_name", "rd1_ch", "rd_pos_1", "strand1", "rd2_ch", "rd_pos_2", "strand2", "frag_lngth","res_frag_1", "res_frag_2", "map_qual_1", "map_qual_2", "chrom_assign")
   
-  bin_rd_pos_1<- floor(datain$rd_pos_1/sbin)
+  bin_rd_pos_1<- floor(datain$rd_pos_1/sbin) #gives chromosome indexed bin number
   bin_rd_pos_2<- floor(datain$rd_pos_2/sbin)
   
   #### spliting 0-0 to 0,0
@@ -134,7 +134,11 @@ binit <- function(datain="~/bigdata/hic/data/SRR2240738/mm10/output/hic_results/
     
      
      
-  
+  #    verify2 <- binit_out$bin_rd_pos_1 > binit_out$bin_rd_pos_2
+  # sum(verify2)#this doesnt seem to be working, the switching
+  # 
+  # head(binit_out) ###rd_pos not adding index sufficinetly
+  # 
 
     
    ##### selecting all rows in binit_out within unique pair of bins
@@ -151,7 +155,7 @@ binit <- function(datain="~/bigdata/hic/data/SRR2240738/mm10/output/hic_results/
     final_frame <- cbind.data.frame(unique_bins, empty_frame)#initializing
     
     
-    
+    ####Counting the chomrosome linkages
     tot_unique_bins = 1:(nrow(unique_bins))  
     for(n in tot_unique_bins){
         
@@ -194,12 +198,29 @@ binit <- function(datain="~/bigdata/hic/data/SRR2240738/mm10/output/hic_results/
         
         }
      
+    correct_chr_1 <- binit_out$datain.rd1_ch[unique_bins]
+    correct_chr_2 <- binit_out$datain.rd2_ch[unique_bins]
+    
+     final_frame_out <- cbind.data.frame(final_frame$bin_1, correct_chr_1, final_frame$bin_2, correct_chr_2,final_frame$`x-x`,final_frame$`x-a`, final_frame$`x-b`,final_frame$`a-x`,final_frame$`b-x`,final_frame$`a-a`,final_frame$`b-b`,final_frame$`a-b`,final_frame$`b-a`)
+  
+     colnames(final_frame_out) = c("bin_1", "chr_1", "bin_2", "chr_2", "a-a", "a-b", "b-a", "b-b", "a-x", "b-x", "x-a", "x-b", "x-x" )
      
-     
-     write.table(final_frame, outfile_name , append=FALSE, sep="\t", quote=FALSE)
+      write.table(final_frame_out, outfile_name , append=FALSE, sep="\t", quote=FALSE)
 
   
   
+    # #BINNING
+  # datain <- read.table(datain)
+  # colnames(datain) <-  c("read_name", "ch_1_locus", "rd_pos_1", "strand1", "ch_2_locus", "rd_pos_2", "strand2", "frag_lngth","res_frag_1", "res_frag_2", "map_qual_1", "map_qual_2", "chrom_assign")
+  # 
+  # bin_rd_pos_1_no_round <- datain$rd_pos_1/sbin
+  # bin_rd_pos_1 <- floor(bin_rd_pos_1_no_round) #using floor rather than ceiling to start at bin 0
+  #   
+  # bin_rd_pos_2_no_round <- datain$rd_pos_2/sbin
+  # bin_rd_pos_2 <- floor(bin_rd_pos_2_no_round)
+  # binit_out<-data.frame(datain$read_name, datain$ch_1_locus, datain$rd_pos_1, bin_rd_pos_1, datain$ch_2_locus, datain$rd_pos_2, bin_rd_pos_2, datain$chrom_assign, row.names=TRUE)
+  # 
+  ####OUTPUT
   
 }
 
