@@ -15,11 +15,8 @@ binit <- function(input_data="~/bigdata/hic/data/SRR2240738/mm10/output/hic_resu
   inputlist = strsplit(input_data,"/") 
   inputsplit = inputlist[[1]] # could use unlist command
   l = length(inputsplit)
-  outfile_name = paste0(inputsplit[l],"_binit_out_11_13")
+  outfile_name = paste0(inputsplit[l],"_binit_out_11_15")
   ######
-  
-  
-  
   
   
   
@@ -38,24 +35,26 @@ binit <- function(input_data="~/bigdata/hic/data/SRR2240738/mm10/output/hic_resu
   
   
   
-  
-  #introduce input data
+  ###introduce input data
   datain <- read.table(input_data)
   colnames(datain) <-  c("read_name", "rd1_ch", "rd_pos_1", "strand1", "rd2_ch", "rd_pos_2", "strand2", "frag_lngth","res_frag_1", "res_frag_2", "map_qual_1", "map_qual_2", "chrom_assign")
   
   
+  
+  ##### removing any incomplete cases or levels that appear in read 2 but not read 1 (this means the parent with most chormosmomes needs to be "read 2")
   datain[,5] <-factor(datain[,5], levels=c(levels(datain$rd1_ch)))#overwriting levels of rd2_ch with rd1_ch net change is rd2_ch loses chrY which is what i was trying to accomplish
   datain <- datain[complete.cases(datain),]#removing all rows with <NA> cases (in test dataset only 83 of 859703)
   
   
+  ##### removing all inter-chromosomal reads
   datain_no_inter <- datain[datain$rd1_ch == datain$rd2_ch,]
   
   
-  #first bining
+  ### preliminary bining, the bin numbers this produces will be indexed on each chromosome
   bin_rd_pos_1<- floor(datain_no_inter$rd_pos_1/sbin) #gives chromosome indexed bin number
   bin_rd_pos_2<- floor(datain_no_inter$rd_pos_2/sbin)
   
-  # #### spliting 0-0 to 0,0
+  # #### spliting 0-0 to 0,0 as two columns
   # binit_in_progress<-data.frame(datain_no_inter$read_name, datain_no_inter$rd1_ch, datain_no_inter$rd_pos_1, bin_rd_pos_1, datain_no_inter$rd2_ch, datain_no_inter$rd_pos_2, bin_rd_pos_2, datain_no_inter$chrom_assign, row.names=TRUE)
   # 
   # chrm_assign_col <-(binit_in_progress$datain_no_inter.chrom_assign)
@@ -70,19 +69,21 @@ binit <- function(input_data="~/bigdata/hic/data/SRR2240738/mm10/output/hic_resu
   # colnames(type_both) = c("type1","type2")
   #########
   
+  ##### data processsing cont.
   binit_out<-data.frame(datain_no_inter$read_name, datain_no_inter$rd1_ch, datain_no_inter$rd_pos_1, bin_rd_pos_1, datain_no_inter$rd2_ch, datain_no_inter$rd_pos_2, bin_rd_pos_2, datain_no_inter$chrom_assign, row.names=NULL)
   
+  #### creating placeholder
   binit_preprocessed <- binit_out
   
   
-  #####making all bins seqential
+  ##### making all bins seqential along entire genome
   for(chr in chromes){
     add_index = cumbins[chr,] #adding the cumulative sum of bins to make the bin number outputs all sequential
     #chr <- as.factor(chr)
     
     temp1 = binit_out$bin_rd_pos_1[ binit_out$datain_no_inter.rd1_ch == chr ]
     binit_out$bin_rd_pos_1[ binit_out$datain_no_inter.rd1_ch == chr ] = temp1 + add_index
-
+    
     temp2 = binit_out$bin_rd_pos_2[ binit_out$datain_no_inter.rd2_ch == chr ]
     binit_out$bin_rd_pos_2[ binit_out$datain_no_inter.rd2_ch == chr ] = temp2 + add_index
   }
@@ -96,33 +97,27 @@ binit <- function(input_data="~/bigdata/hic/data/SRR2240738/mm10/output/hic_resu
     
     tempr1 = binit_out$datain.rd_pos_1[ binit_out$datain_no_inter.rd1_ch == chr ]
     binit_out$datain.rd_pos_1[ binit_out$datain_no_inter.rd1_ch == chr ] = tempr1 + add_indexr
-
+    
     tempr2 = binit_out$datain.rd_pos_2[ binit_out$datain_no_inter.rd2_ch == chr ]
     binit_out$datain.rd_pos_2[ binit_out$datain_no_inter.rd2_ch == chr ] = tempr2 + add_indexr
   }
   
-  
-  
+ 
   
   #####  SORTING then selecting all rows in binit_out within unique pair of bins
   sorted_binit_out <- binit_out[order(binit_out$bin_rd_pos_1,binit_out$bin_rd_pos_2),]
   
-  
   unique_bins <- unique(cbind(sorted_binit_out$bin_rd_pos_1, sorted_binit_out$bin_rd_pos_2)) #2 col matrix with all unique bin combos
   colnames(unique_bins) <- c("bin_1", "bin_2")
   
+  ####initializing the output data.frame
   empty_frame <- data.frame(matrix(0,ncol=9,nrow=nrow(unique_bins)))
   colnames(empty_frame) = c("a-a", "a-b", "b-a", "b-b", "a-x", "b-x", "x-a", "x-b", "x-x" )
-  
-  
-  #####need to make a final_frame for each chromosome???
   final_frame <- cbind.data.frame(unique_bins, empty_frame)#initializing
   
   
   
- 
-  
-  ####New counting scheme
+  ####New counting scheme (turning the factor column "chrom.assign" into counts in several columns)
   unique_bin_row <-1
   
   length_binit_out <- 1:(length(sorted_binit_out$datain_no_inter.chrom_assign))
@@ -181,7 +176,9 @@ binit <- function(input_data="~/bigdata/hic/data/SRR2240738/mm10/output/hic_resu
     
   }
   
-  #adding back in chromosomes, only using the unique bin rows
+ 
+  
+  ###adding back in chromosomes from sorted_binit_out, only using the unique bin rows
   correct_chr_1 <- data.frame(matrix(0,ncol=1,nrow=nrow(unique_bins)))
   correct_chr_2 <- data.frame(matrix(0,ncol=1,nrow=nrow(unique_bins)))
   
@@ -202,16 +199,12 @@ binit <- function(input_data="~/bigdata/hic/data/SRR2240738/mm10/output/hic_resu
       correct_chr_2[unique_bin_row2,1] <- as.character(sorted_binit_out$datain_no_inter.rd2_ch[row2])
       
     }}
-  #correct_chr_1 <- sorted_binit_out$datain_no_inter.rd1_ch[sorted_binit_out$bin_rd_pos_1 == unique_bins[,1] && sorted_binit_out$bin_rd_pos_2 == unique_bins[,2]]
-  #correct_chr_2 <- sorted_binit_out$datain_no_inter.rd2_ch[sorted_binit_out$bin_rd_pos_1 == unique_bins[,1] && sorted_binit_out$bin_rd_pos_2 == unique_bins[,2]]
-  
+ 
+  #### output
   final_frame_out <- cbind.data.frame(final_frame$bin_1, final_frame$bin_2,correct_chr_1,correct_chr_2, final_frame$`a-a`,final_frame$`b-b`, final_frame$`a-b`,final_frame$`b-a`,final_frame$`a-x`,final_frame$`b-x`,final_frame$`x-a`,final_frame$`x-b`,final_frame$`x-x`)
-  
   colnames(final_frame_out) = c("bin_1", "bin_2","chr_1", "chr_2", "a-a","b-b", "a-b", "b-a", "a-x", "b-x", "x-a", "x-b", "x-x" )
   
   write.table(final_frame_out, outfile_name , append=FALSE, sep="\t", quote=FALSE)
-  
-  
   
   
 }
